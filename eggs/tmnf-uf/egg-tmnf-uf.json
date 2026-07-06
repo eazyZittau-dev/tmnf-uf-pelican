@@ -1,0 +1,233 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PLCN_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-07-06T20:59:57+00:00",
+    "name": "TrackMania Nations Forever / United Forever",
+    "author": "theanton1998@gmail.com",
+    "uuid": "e7f2b49b-c7be-44b1-b1cb-5fb320126949",
+    "description": "Dedicated server for TrackMania Nations Forever \/ United Forever. Ports the archived Hoerli1337\/pterodactyl-eggs TMNF-UF egg to the current Pelican egg schema, fixes the config-generation bug that ignored variable changes on restart, and reads the dedicated config through Pelican's built-in XML file parser instead of a hand-rolled heredoc.",
+    "tags": [
+        "trackmania",
+        "racing"
+    ],
+    "features": [],
+    "docker_images": {
+        "ghcr.io\/parkervcp\/yolks:debian": "ghcr.io\/parkervcp\/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": ".\/TrackmaniaServer \/nodaemon \/dedicated_cfg=dedicated_cfg.txt \/game_settings=MatchSettings\/tracklist.txt \/noautoquit",
+    "config": {
+        "files": "{\n    \"GameData\/Config\/dedicated_cfg.txt\": {\n        \"parser\": \"xml\",\n        \"find\": {\n            \"dedicated.authorization_levels.level.password\": \"{{server.environment.ADMIN_PASSWORD}}\",\n            \"dedicated.masterserver_account.login\": \"{{server.environment.MASTERSERVER_ACCOUNT_USER}}\",\n            \"dedicated.masterserver_account.password\": \"{{server.environment.MASTERSERVER_ACCOUNT_PWD}}\",\n            \"dedicated.masterserver_account.validation_key\": \"{{server.environment.MASTERSERVER_KEY}}\",\n            \"dedicated.server_options.name\": \"{{server.environment.SERVER_NAME}}\",\n            \"dedicated.server_options.comment\": \"{{server.environment.COMMENT}}\",\n            \"dedicated.server_options.max_players\": \"{{server.environment.MAX_PLAYERS}}\",\n            \"dedicated.server_options.max_spectators\": \"{{server.environment.MAX_SPECTATORS}}\",\n            \"dedicated.server_options.password\": \"{{server.environment.SERVER_PASSWORD}}\",\n            \"dedicated.server_options.password_spectator\": \"{{server.environment.SPECTATOR_PASSWORD}}\",\n            \"dedicated.server_options.ladder_mode\": \"{{server.environment.LADDER_MODE}}\",\n            \"dedicated.system_config.server_port\": \"{{server.allocations.default.port}}\",\n            \"dedicated.system_config.server_p2p_port\": \"{{server.environment.SERVER_P2P_PORT}}\",\n            \"dedicated.system_config.xmlrpc_port\": \"{{server.environment.XMLRPC_PORT}}\",\n            \"dedicated.system_config.xmlrpc_allowremote\": \"True\",\n            \"dedicated.system_config.packmask\": \"{{server.environment.PACKMASK}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Starting ...\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\nset -e\r\n\r\napt update\r\napt install -y ca-certificates curl unzip\r\n\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server\r\n\r\nDEDICATED_URL=\"http:\/\/files2.trackmaniaforever.com\/TrackmaniaServer_2011-02-21.zip\"\r\nTRACKLIST_URL=\"https:\/\/raw.githubusercontent.com\/Hoerli1337\/pterodactyl-eggs\/master\/TMNF-UF\/tracklist.txt\"\r\n\r\necho \"Downloading TrackMania Forever dedicated server...\"\r\ncurl -sSL -o server.zip \"${DEDICATED_URL}\"\r\nunzip -qo server.zip -d \/mnt\/server\r\nrm server.zip\r\nchmod 755 TrackmaniaServer\r\n\r\n# Strip files that are useless on a headless dedicated server\r\nrm -rf RemoteControlExamples CommandLine.html ListCallbacks.html ListMethods.html \\\r\n       manialink_dedicatedserver.txt Readme_Dedicated.html TrackmaniaServer.exe\r\n\r\n# Keep the shipped default dedicated_cfg.txt in place - Pelican's config.files\r\n# parser rewrites the relevant fields from the panel's environment variables on\r\n# every server start, instead of the one-shot heredoc the old egg used (which\r\n# silently ignored variable changes after the first boot).\r\n\r\nmkdir -p GameData\/Tracks\/MatchSettings\r\necho \"Downloading default tracklist...\"\r\ncurl -sSL -o GameData\/Tracks\/MatchSettings\/tracklist.txt \"${TRACKLIST_URL}\"\r\n\r\necho \"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\"\r\necho \"TRACKMANIA SERVER INSTALLED\"\r\necho \"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "TrackMania Login",
+            "description": "Login for your (dedicated server) TrackMania account. Create one at https:\/\/players.trackmaniaforever.com\/",
+            "env_variable": "MASTERSERVER_ACCOUNT_USER",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:64"
+            ],
+            "sort": 1
+        },
+        {
+            "name": "TrackMania Password",
+            "description": "Password for the account above.",
+            "env_variable": "MASTERSERVER_ACCOUNT_PWD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:64"
+            ],
+            "sort": 2
+        },
+        {
+            "name": "Master Server Key",
+            "description": "Last 3 characters of your premium player key. Leave empty for a plain TMNF\/TMUF account without a key.",
+            "env_variable": "MASTERSERVER_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:3"
+            ],
+            "sort": 3
+        },
+        {
+            "name": "Server Name",
+            "description": "Name shown in the server browser.",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A TrackMania Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:100"
+            ],
+            "sort": 4
+        },
+        {
+            "name": "Server Description",
+            "description": "Comment shown in the server browser.",
+            "env_variable": "COMMENT",
+            "default_value": "Powered by Pelican",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:100"
+            ],
+            "sort": 5
+        },
+        {
+            "name": "Server Password",
+            "description": "Leave empty for a public server.",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:32"
+            ],
+            "sort": 6
+        },
+        {
+            "name": "Spectator Password",
+            "description": "Leave empty to allow free spectating.",
+            "env_variable": "SPECTATOR_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:32"
+            ],
+            "sort": 7
+        },
+        {
+            "name": "Admin Password",
+            "description": "Shared password for the SuperAdmin, Admin, and User authorization levels of the dedicated server (XML-RPC). Change this from the default before going public.",
+            "env_variable": "ADMIN_PASSWORD",
+            "default_value": "changeme",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:32"
+            ],
+            "sort": 8
+        },
+        {
+            "name": "Max Players",
+            "description": "Maximum number of racing slots.",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "integer",
+                "between:1,255"
+            ],
+            "sort": 9
+        },
+        {
+            "name": "Max Spectators",
+            "description": "Maximum number of spectator slots.",
+            "env_variable": "MAX_SPECTATORS",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "integer",
+                "between:0,255"
+            ],
+            "sort": 10
+        },
+        {
+            "name": "Ladder Mode",
+            "description": "0 = disabled, 1 = friendly, forced = ranked ladder play.",
+            "env_variable": "LADDER_MODE",
+            "default_value": "forced",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "in:0,1,forced"
+            ],
+            "sort": 11
+        },
+        {
+            "name": "Environment / Packmask",
+            "description": "'stadium' for TrackMania Nations Forever. Leave empty, or use 'united'\/'desert'\/'island'\/'rally'\/'bay'\/'coast'\/'stadium' for TrackMania United Forever.",
+            "env_variable": "PACKMASK",
+            "default_value": "stadium",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:16"
+            ],
+            "sort": 12
+        },
+        {
+            "name": "P2P Port",
+            "description": "UDP port used for peer-to-peer map\/skin distribution. Allocate an extra port on this server and put it here.",
+            "env_variable": "SERVER_P2P_PORT",
+            "default_value": "3450",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "integer",
+                "between:1024,65535"
+            ],
+            "sort": 13
+        },
+        {
+            "name": "XML-RPC Port",
+            "description": "Local control port for the dedicated server (used by server controllers such as XAseco/ManiaControl). Does not need to be exposed publicly.",
+            "env_variable": "XMLRPC_PORT",
+            "default_value": "5000",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "integer",
+                "between:1024,65535"
+            ],
+            "sort": 14
+        }
+    ]
+}
