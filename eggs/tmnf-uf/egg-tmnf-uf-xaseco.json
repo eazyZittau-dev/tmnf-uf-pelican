@@ -5,10 +5,10 @@
         "update_url": null
     },
     "exported_at": "2026-07-06T20:59:57+00:00",
-    "name": "TrackMania NF \/ UF + XAseco",
+    "name": "TrackMania NF / UF + XAseco",
     "author": "theanton1998@gmail.com",
     "uuid": "9f2edd03-6237-4775-84b2-6e820a9b1de6",
-    "description": "TrackMania Nations Forever \/ United Forever dedicated server bundled with the XAseco 1.16 controller (records, Dedimania, admin commands). Requires a MySQL\/MariaDB database with the XAseco table structure imported. Replaces the archived Hoerli1337\/WhatEverest1 egg's dependency on an external, now-404'ing start.sh with a self-contained wrapper baked in at install time, and runs on the official php:8.2-cli-bookworm image (mysqli compiled in at install time) instead of a third-party image Wings can't boot.",
+    "description": "TrackMania Nations Forever / United Forever dedicated server bundled with the XAseco 1.16 controller (records, Dedimania, admin commands). Requires a MySQL/MariaDB database with the XAseco table structure imported. Runs on the plain ghcr.io/pelican-eggs/yolks:debian image (the only kind of image whose entrypoint understands Pelican/Wings' STARTUP convention); PHP itself is vendored into the persistent server directory at install time (with mysqli) since no official Pelican PHP yolk exists and no third-party PHP image (e.g. the official php:*-cli images, webdevops/php) speaks that convention.",
     "tags": [
         "trackmania",
         "racing",
@@ -16,28 +16,27 @@
     ],
     "features": [],
     "docker_images": {
-        "php:8.2-cli-bookworm": "php:8.2-cli-bookworm",
-        "php:8.1-cli-bookworm": "php:8.1-cli-bookworm"
+        "ghcr.io/pelican-eggs/yolks:debian": "ghcr.io/pelican-eggs/yolks:debian"
     },
     "file_denylist": [],
-    "startup": ".\/start.sh",
+    "startup": "./start.sh",
     "config": {
-        "files": "{\n    \"tmserver\/GameData\/Config\/dedicated_cfg.txt\": {\n        \"parser\": \"xml\",\n        \"find\": {\n            \"dedicated.authorization_levels.level.password\": \"{{server.environment.RPC_PASSWORD}}\",\n            \"dedicated.server_options.name\": \"{{server.environment.SERVER_NAME}}\",\n            \"dedicated.server_options.comment\": \"{{server.environment.SERVER_COMMENT}}\",\n            \"dedicated.server_options.max_players\": \"{{server.environment.MAX_PLAYER}}\",\n            \"dedicated.server_options.max_spectators\": \"{{server.environment.MAX_PLAYER}}\",\n            \"dedicated.server_options.password\": \"{{server.environment.SERVER_PASSWORD}}\",\n            \"dedicated.system_config.force_ip_address\": \"{{server.environment.FORCE_IP_ADDRESS}}\",\n            \"dedicated.system_config.server_port\": \"{{server.allocations.default.port}}\",\n            \"dedicated.system_config.server_p2p_port\": \"{{server.environment.SERVER_P2P_PORT}}\",\n            \"dedicated.system_config.xmlrpc_port\": \"{{server.environment.RPC_PORT}}\",\n            \"dedicated.system_config.xmlrpc_allowremote\": \"True\",\n            \"dedicated.system_config.packmask\": \"{{server.environment.PACKMASK}}\"\n        }\n    }\n}",
+        "files": "{\n    \"tmserver/GameData/Config/dedicated_cfg.txt\": {\n        \"parser\": \"xml\",\n        \"find\": {\n            \"dedicated.authorization_levels.level.password\": \"{{server.environment.RPC_PASSWORD}}\",\n            \"dedicated.server_options.name\": \"{{server.environment.SERVER_NAME}}\",\n            \"dedicated.server_options.comment\": \"{{server.environment.SERVER_COMMENT}}\",\n            \"dedicated.server_options.max_players\": \"{{server.environment.MAX_PLAYER}}\",\n            \"dedicated.server_options.max_spectators\": \"{{server.environment.MAX_PLAYER}}\",\n            \"dedicated.server_options.password\": \"{{server.environment.SERVER_PASSWORD}}\",\n            \"dedicated.system_config.force_ip_address\": \"{{server.environment.FORCE_IP_ADDRESS}}\",\n            \"dedicated.system_config.server_port\": \"{{server.allocations.default.port}}\",\n            \"dedicated.system_config.server_p2p_port\": \"{{server.environment.SERVER_P2P_PORT}}\",\n            \"dedicated.system_config.xmlrpc_port\": \"{{server.environment.RPC_PORT}}\",\n            \"dedicated.system_config.xmlrpc_allowremote\": \"True\",\n            \"dedicated.system_config.packmask\": \"{{server.environment.PACKMASK}}\"\n        }\n    }\n}",
         "startup": "{\n    \"done\": \"Starting ...\"\n}",
         "logs": "{}",
         "stop": "^C"
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\nset -e\r\ncd \/mnt\/server\r\n\r\n# Same image as the runtime container (php:8.2-cli-bookworm), so the\r\n# mysqli.so compiled below is ABI-compatible with the PHP that actually\r\n# runs the server later. The official php:*-cli images have no mysqli\/\r\n# pdo_mysql built in and no root-less \"root missing from passwd\" quirks\r\n# some third-party PHP images (e.g. webdevops\/php) have, which crashed\r\n# Wings on container start.\r\napt-get update -qq\r\napt-get install -y -qq curl unzip xmlstarlet default-libmysqlclient-dev pkg-config >\/dev\/null\r\n\r\necho \"Compiling the mysqli extension for later use by start.sh...\"\r\ndocker-php-ext-install -j\"$(nproc)\" mysqli >\/dev\/null\r\nmkdir -p \/mnt\/server\/php-ext\r\ncp \"$(php -r 'echo ini_get(\"extension_dir\");')\/mysqli.so\" \/mnt\/server\/php-ext\/mysqli.so\r\n\r\nDEDICATED_URL=\"http:\/\/files2.trackmaniaforever.com\/TrackmaniaServer_2011-02-21.zip\"\r\nXASECO_URL=\"https:\/\/fastdl.gamemania.org\/xaseco1.16-php7.zip\"\r\nTRACKLIST_URL=\"https:\/\/raw.githubusercontent.com\/Hoerli1337\/pterodactyl-eggs\/master\/TMNF-UF\/tracklist.txt\"\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Downloading TrackMania Forever dedicated server...\"\r\ncurl -fsSL -o server.zip \"$DEDICATED_URL\"\r\nunzip -qo server.zip -d tmserver\r\nrm server.zip\r\nchmod 755 tmserver\/TrackmaniaServer\r\nmkdir -p tmserver\/GameData\/Tracks\/MatchSettings\r\ncurl -fsSL -o tmserver\/GameData\/Tracks\/MatchSettings\/tracklist.txt \"$TRACKLIST_URL\"\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Server download done, downloading XAseco...\"\r\ncurl -fsSL -o XAseco.zip \"$XASECO_URL\"\r\nunzip -qo XAseco.zip -d xaseco\r\nrm XAseco.zip\r\ncd xaseco\r\n\r\necho \"Removing files not needed in a container...\"\r\nrm -f Aseco.bat Aseco.sh AsecoF.sh\r\n# These need to be moved for XAseco to find them\r\nmv -f jfreu.config.php includes\/jfreu.config.php 2>\/dev\/null || true\r\nmv -f votes.config.php includes\/votes.config.php 2>\/dev\/null || true\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Writing XAseco configuration...\"\r\n# xmlstarlet escapes some angle brackets XAseco expects literal; unescape\r\n# them with sed afterwards, same fix the original egg relied on.\r\nxmlstarlet ed -L \\\r\n    -u \"\/dedimania\/masterserver_account\/login\" -v \"$MASTER_LOGIN\" \\\r\n    -u \"\/dedimania\/masterserver_account\/password\" -v \"$MASTER_PASSWORD\" \\\r\n    -u \"\/dedimania\/masterserver_account\/nation\" -v \"$SERVER_NATION\" \\\r\n    dedimania.xml\r\n\r\nxmlstarlet ed -L \\\r\n    -u \"\/settings\/tmserver\/login\" -v \"$RPC_LOGIN\" \\\r\n    -u \"\/settings\/tmserver\/password\" -v \"$RPC_PASSWORD\" \\\r\n    -u \"\/settings\/tmserver\/ip\" -v \"$RPC_IP\" \\\r\n    -u \"\/settings\/tmserver\/port\" -v \"$RPC_PORT\" \\\r\n    -s \"\/settings\/aseco\/masteradmins\" -t elem -n \"tmlogin\" -v \"$MASTERADMIN_LOGIN\" \\\r\n    config.xml\r\n\r\nxmlstarlet ed -L \\\r\n    -u \"\/settings\/mysql_server\" -v \"$DB_HOST\" \\\r\n    -u \"\/settings\/mysql_login\" -v \"$DB_USER\" \\\r\n    -u \"\/settings\/mysql_password\" -v \"$DB_PASSWORD\" \\\r\n    -u \"\/settings\/mysql_database\" -v \"$DB_NAME\" \\\r\n    localdatabase.xml\r\n\r\nsed -i -e 's\/}\\&gt;\\&gt;\/}>>\/g' -e 's\/}\\&gt;\/}>\/g' dedimania.xml localdatabase.xml config.xml\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Writing start.sh wrapper (runs the game server + XAseco in one container)...\"\r\ncat > \/mnt\/server\/start.sh <<'EOS'\r\n#!\/bin\/bash\r\ncd \/home\/container\/tmserver\r\n.\/TrackmaniaServer \/nodaemon \/dedicated_cfg=dedicated_cfg.txt \/game_settings=MatchSettings\/tracklist.txt \/noautoquit &\r\nGAME_PID=$!\r\n\r\ncleanup() {\r\n    kill \"$GAME_PID\" 2>\/dev\/null || true\r\n    exit 0\r\n}\r\ntrap cleanup SIGINT SIGTERM\r\n\r\n# give the dedicated server time to open its XML-RPC port before XAseco connects\r\nsleep 10\r\n\r\ncd \/home\/container\/xaseco\r\nphp -d extension=\/home\/container\/php-ext\/mysqli.so controller.php &\r\nXASECO_PID=$!\r\n\r\nwait \"$XASECO_PID\"\r\nkill \"$GAME_PID\" 2>\/dev\/null || true\r\nEOS\r\nchmod +x \/mnt\/server\/start.sh\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Installation done\"\r\nexit 0",
-            "container": "php:8.2-cli-bookworm",
+            "script": "#!/bin/bash\r\nset -e\r\ncd /mnt/server\r\n\r\napt-get update -qq\r\napt-get install -y -qq --no-install-recommends ca-certificates curl unzip xmlstarlet php-cli php-mysqli >/dev/null\r\n\r\nDEDICATED_URL=\"http://files2.trackmaniaforever.com/TrackmaniaServer_2011-02-21.zip\"\r\nXASECO_URL=\"https://fastdl.gamemania.org/xaseco1.16-php7.zip\"\r\nTRACKLIST_URL=\"https://raw.githubusercontent.com/Hoerli1337/pterodactyl-eggs/master/TMNF-UF/tracklist.txt\"\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Downloading TrackMania Forever dedicated server...\"\r\ncurl -fsSL -o server.zip \"$DEDICATED_URL\"\r\nunzip -qo server.zip -d tmserver\r\nrm server.zip\r\nchmod 755 tmserver/TrackmaniaServer\r\nmkdir -p tmserver/GameData/Tracks/MatchSettings\r\ncurl -fsSL -o tmserver/GameData/Tracks/MatchSettings/tracklist.txt \"$TRACKLIST_URL\"\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Server download done, downloading XAseco...\"\r\ncurl -fsSL -o XAseco.zip \"$XASECO_URL\"\r\nunzip -qo XAseco.zip -d xaseco\r\nrm XAseco.zip\r\ncd xaseco\r\n\r\necho \"Removing files not needed in a container...\"\r\nrm -f Aseco.bat Aseco.sh AsecoF.sh\r\n# These need to be moved for XAseco to find them\r\nmv -f jfreu.config.php includes/jfreu.config.php 2>/dev/null || true\r\nmv -f votes.config.php includes/votes.config.php 2>/dev/null || true\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Writing XAseco configuration...\"\r\n# xmlstarlet escapes some angle brackets XAseco expects literal; unescape\r\n# them with sed afterwards, same fix the original egg relied on.\r\nxmlstarlet ed -L \\\r\n    -u \"/dedimania/masterserver_account/login\" -v \"$MASTER_LOGIN\" \\\r\n    -u \"/dedimania/masterserver_account/password\" -v \"$MASTER_PASSWORD\" \\\r\n    -u \"/dedimania/masterserver_account/nation\" -v \"$SERVER_NATION\" \\\r\n    dedimania.xml\r\n\r\nxmlstarlet ed -L \\\r\n    -u \"/settings/tmserver/login\" -v \"$RPC_LOGIN\" \\\r\n    -u \"/settings/tmserver/password\" -v \"$RPC_PASSWORD\" \\\r\n    -u \"/settings/tmserver/ip\" -v \"$RPC_IP\" \\\r\n    -u \"/settings/tmserver/port\" -v \"$RPC_PORT\" \\\r\n    -s \"/settings/aseco/masteradmins\" -t elem -n \"tmlogin\" -v \"$MASTERADMIN_LOGIN\" \\\r\n    config.xml\r\n\r\nxmlstarlet ed -L \\\r\n    -u \"/settings/mysql_server\" -v \"$DB_HOST\" \\\r\n    -u \"/settings/mysql_login\" -v \"$DB_USER\" \\\r\n    -u \"/settings/mysql_password\" -v \"$DB_PASSWORD\" \\\r\n    -u \"/settings/mysql_database\" -v \"$DB_NAME\" \\\r\n    localdatabase.xml\r\n\r\nsed -i -e 's/}\\&gt;\\&gt;/}>>/g' -e 's/}\\&gt;/}>/g' dedimania.xml localdatabase.xml config.xml\r\ncd /mnt/server\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Vendoring a self-contained PHP + mysqli into the persistent server\"\r\necho \"directory. The runtime image (ghcr.io/pelican-eggs/yolks:debian) has no\"\r\necho \"PHP of its own, and packages installed in this install-stage container\"\r\necho \"don't carry over to the runtime container - only /mnt/server does.\"\r\nPHP_BIN=\"$(readlink -f \"$(command -v php)\")\"\r\nEXT_DIR=\"$(php -r 'echo ini_get(\"extension_dir\");')\"\r\n\r\nmkdir -p /mnt/server/phproot/bin /mnt/server/phproot/lib /mnt/server/phproot/ext\r\ncp -L \"$PHP_BIN\" /mnt/server/phproot/bin/php\r\ncp -L \"$EXT_DIR/mysqli.so\" /mnt/server/phproot/ext/mysqli.so\r\n\r\ndeclare -A seen\r\nqueue=(\"$PHP_BIN\" \"$EXT_DIR/mysqli.so\")\r\nwhile [ ${#queue[@]} -gt 0 ]; do\r\n    f=\"${queue[0]}\"\r\n    queue=(\"${queue[@]:1}\")\r\n    for lib in $(ldd \"$f\" 2>/dev/null | awk '{print $3}' | grep '^/'); do\r\n        real=\"$(readlink -f \"$lib\")\"\r\n        if [ -z \"${seen[$real]:-}\" ]; then\r\n            seen[$real]=1\r\n            cp -Ln \"$real\" /mnt/server/phproot/lib/ 2>/dev/null || true\r\n            queue+=(\"$real\")\r\n        fi\r\n    done\r\ndone\r\n\r\ncat > /mnt/server/phproot/run-php <<'EOS'\r\n#!/bin/bash\r\nDIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\r\nexport LD_LIBRARY_PATH=\"$DIR/lib\"\r\nexec \"$DIR/bin/php\" -d \"extension=$DIR/ext/mysqli.so\" \"$@\"\r\nEOS\r\nchmod +x /mnt/server/phproot/run-php\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Writing start.sh wrapper (runs the game server + XAseco in one container)...\"\r\ncat > /mnt/server/start.sh <<'EOS'\r\n#!/bin/bash\r\ncd /home/container/tmserver\r\n./TrackmaniaServer /nodaemon /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/tracklist.txt /noautoquit &\r\nGAME_PID=$!\r\n\r\ncleanup() {\r\n    kill \"$GAME_PID\" 2>/dev/null || true\r\n    exit 0\r\n}\r\ntrap cleanup SIGINT SIGTERM\r\n\r\n# give the dedicated server time to open its XML-RPC port before XAseco connects\r\nsleep 10\r\n\r\ncd /home/container/xaseco\r\n/home/container/phproot/run-php controller.php &\r\nXASECO_PID=$!\r\n\r\nwait \"$XASECO_PID\"\r\nkill \"$GAME_PID\" 2>/dev/null || true\r\nEOS\r\nchmod +x /mnt/server/start.sh\r\n\r\necho \"_________________________________________________________________________\"\r\necho \"Installation done\"\r\nexit 0\r\n",
+            "container": "ghcr.io/pelican-eggs/installers:debian",
             "entrypoint": "bash"
         }
     },
     "variables": [
         {
             "name": "Master Login",
-            "description": "Login of the dedicated server account. Create one at https:\/\/players.trackmaniaforever.com\/",
+            "description": "Login of the dedicated server account. Create one at https://players.trackmaniaforever.com/",
             "env_variable": "MASTER_LOGIN",
             "default_value": "",
             "user_viewable": true,
@@ -65,7 +64,7 @@
         },
         {
             "name": "Masteradmin",
-            "description": "Your own TrackMania NF\/UF login, to get MasterAdmin rights in XAseco.",
+            "description": "Your own TrackMania NF/UF login, to get MasterAdmin rights in XAseco.",
             "env_variable": "MASTERADMIN_LOGIN",
             "default_value": "",
             "user_viewable": true,
@@ -148,8 +147,8 @@
             "sort": 8
         },
         {
-            "name": "Environment \/ Packmask",
-            "description": "'stadium' or 'nations' for TMNF. For TMUF leave empty\/'united', or a single environment like 'desert', or 'original'\/'sunrise' for older environment sets.",
+            "name": "Environment / Packmask",
+            "description": "'stadium' or 'nations' for TMNF. For TMUF leave empty/'united', or a single environment like 'desert', or 'original'/'sunrise' for older environment sets.",
             "env_variable": "PACKMASK",
             "default_value": "stadium",
             "user_viewable": true,
@@ -177,7 +176,7 @@
         },
         {
             "name": "P2P Port",
-            "description": "UDP port for peer-to-peer map\/skin distribution. Allocate an extra port on this server and put it here.",
+            "description": "UDP port for peer-to-peer map/skin distribution. Allocate an extra port on this server and put it here.",
             "env_variable": "SERVER_P2P_PORT",
             "default_value": "3450",
             "user_viewable": true,
@@ -218,7 +217,7 @@
             "sort": 13
         },
         {
-            "name": "RPC \/ Admin Password",
+            "name": "RPC / Admin Password",
             "description": "Password shared by the SuperAdmin, Admin, and User authorization levels and by XAseco's connection to the dedicated server. Change this from the default before going public.",
             "env_variable": "RPC_PASSWORD",
             "default_value": "changeme",
@@ -247,7 +246,7 @@
         },
         {
             "name": "DB Host",
-            "description": "MySQL\/MariaDB host for the XAseco database. Import the XAseco table structure before starting the server.",
+            "description": "MySQL/MariaDB host for the XAseco database. Import the XAseco table structure before starting the server.",
             "env_variable": "DB_HOST",
             "default_value": "127.0.0.1",
             "user_viewable": true,
@@ -261,7 +260,7 @@
         },
         {
             "name": "DB User",
-            "description": "MySQL\/MariaDB user with access to the XAseco database.",
+            "description": "MySQL/MariaDB user with access to the XAseco database.",
             "env_variable": "DB_USER",
             "default_value": "",
             "user_viewable": true,
