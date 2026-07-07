@@ -221,7 +221,7 @@
             "env_variable": "XMLRPC_PORT",
             "default_value": "5000",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "integer",

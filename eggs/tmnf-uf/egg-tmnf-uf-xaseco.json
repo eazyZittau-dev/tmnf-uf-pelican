@@ -194,8 +194,8 @@
             "description": "Local XML-RPC port XAseco uses to talk to the dedicated server. Does not need to be exposed publicly.",
             "env_variable": "RPC_PORT",
             "default_value": "5000",
-            "user_viewable": false,
-            "user_editable": false,
+            "user_viewable": true,
+            "user_editable": true,
             "rules": [
                 "required",
                 "integer",
@@ -208,8 +208,8 @@
             "description": "XML-RPC login XAseco uses internally. Leave at the default unless you know you need to change it.",
             "env_variable": "RPC_LOGIN",
             "default_value": "SuperAdmin",
-            "user_viewable": false,
-            "user_editable": false,
+            "user_viewable": true,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
@@ -223,7 +223,7 @@
             "env_variable": "RPC_PASSWORD",
             "default_value": "changeme",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
@@ -236,8 +236,8 @@
             "description": "Leave at the default. XAseco connects to the dedicated server over localhost inside the same container.",
             "env_variable": "RPC_IP",
             "default_value": "localhost",
-            "user_viewable": false,
-            "user_editable": false,
+            "user_viewable": true,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
@@ -251,7 +251,7 @@
             "env_variable": "DB_HOST",
             "default_value": "127.0.0.1",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
@@ -265,7 +265,7 @@
             "env_variable": "DB_USER",
             "default_value": "",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
@@ -279,7 +279,7 @@
             "env_variable": "DB_PASSWORD",
             "default_value": "",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "nullable",
                 "string",
@@ -293,7 +293,7 @@
             "env_variable": "DB_NAME",
             "default_value": "",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string",
