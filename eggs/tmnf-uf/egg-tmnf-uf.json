@@ -15,7 +15,7 @@
     ],
     "features": [],
     "docker_images": {
-        "ghcr.io\/parkervcp\/yolks:debian": "ghcr.io\/parkervcp\/yolks:debian"
+        "ghcr.io\/pelican-eggs\/yolks:debian": "ghcr.io\/pelican-eggs\/yolks:debian"
     },
     "file_denylist": [],
     "startup": ".\/TrackmaniaServer \/nodaemon \/dedicated_cfg=dedicated_cfg.txt \/game_settings=MatchSettings\/tracklist.txt \/noautoquit",
@@ -28,7 +28,7 @@
     "scripts": {
         "installation": {
             "script": "#!\/bin\/bash\r\nset -e\r\n\r\napt update\r\napt install -y ca-certificates curl unzip\r\n\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server\r\n\r\nDEDICATED_URL=\"http:\/\/files2.trackmaniaforever.com\/TrackmaniaServer_2011-02-21.zip\"\r\nTRACKLIST_URL=\"https:\/\/raw.githubusercontent.com\/Hoerli1337\/pterodactyl-eggs\/master\/TMNF-UF\/tracklist.txt\"\r\n\r\necho \"Downloading TrackMania Forever dedicated server...\"\r\ncurl -sSL -o server.zip \"${DEDICATED_URL}\"\r\nunzip -qo server.zip -d \/mnt\/server\r\nrm server.zip\r\nchmod 755 TrackmaniaServer\r\n\r\n# Strip files that are useless on a headless dedicated server\r\nrm -rf RemoteControlExamples CommandLine.html ListCallbacks.html ListMethods.html \\\r\n       manialink_dedicatedserver.txt Readme_Dedicated.html TrackmaniaServer.exe\r\n\r\n# Keep the shipped default dedicated_cfg.txt in place - Pelican's config.files\r\n# parser rewrites the relevant fields from the panel's environment variables on\r\n# every server start, instead of the one-shot heredoc the old egg used (which\r\n# silently ignored variable changes after the first boot).\r\n\r\nmkdir -p GameData\/Tracks\/MatchSettings\r\necho \"Downloading default tracklist...\"\r\ncurl -sSL -o GameData\/Tracks\/MatchSettings\/tracklist.txt \"${TRACKLIST_URL}\"\r\n\r\necho \"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\"\r\necho \"TRACKMANIA SERVER INSTALLED\"\r\necho \"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\"",
-            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "container": "ghcr.io\/pelican-eggs\/installers:debian",
             "entrypoint": "bash"
         }
     },

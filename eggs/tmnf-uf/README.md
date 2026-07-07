@@ -10,7 +10,7 @@ Two eggs are provided:
 ## What changed vs. the original egg
 
 - **Schema**: converted from `PTDL_v2` to `PLCN_v2` (`uuid`, `tags`, `features: []`, `rules` as arrays, `sort` on variables).
-- **Docker images**: swapped the archived `quay.io/parkervcp/pterodactyl-images` and the ad-hoc `whateverest1/pterodactyl:php7.4` for currently maintained `ghcr.io/parkervcp/yolks` / `ghcr.io/parkervcp/installers` images.
+- **Docker images**: swapped the archived `quay.io/parkervcp/pterodactyl-images` and the ad-hoc `whateverest1/pterodactyl:php7.4` for currently maintained `ghcr.io/pelican-eggs/yolks` / `ghcr.io/pelican-eggs/installers` images (the `parkervcp` org was renamed to `pelican-eggs`; there is no `php` yolk in that project at all, so the XAseco variant runs on the well-established `webdevops/php` image instead — see the note below).
 - **Config now re-applies on every restart.** The original standalone egg only wrote `dedicated_cfg.txt` once, on first install (`if [ ! -f dedicated_cfg.txt ]`) — changing a variable afterwards and restarting the server did nothing. The Pelican egg now uses Pelican's built-in `config.files` XML parser, so `dedicated_cfg.txt` is rewritten from the panel's variables on every boot.
 - **Fixed a real dead dependency**: the XAseco egg's `startup` script depended on `https://raw.githubusercontent.com/WhatEverest1/xaseco_egg/main/start.sh`, which now 404s. The wrapper script that boots the game server and the XAseco controller together is now generated inline by the install script — no external fetch, nothing to go missing again.
 - Added the `SERVER_PASSWORD` and `Server Description` (`COMMENT`) variables to the standalone egg — the original script referenced these inside the generated config but never actually exposed them as egg variables, so they could never be set from the panel.
@@ -25,6 +25,8 @@ I built and validated this from a sandboxed environment that cannot reach arbitr
 - The tracklist still comes from this repo's `tracklist.txt` / the original repo — both work fine over GitHub.
 
 If a download fails, the install script aborts (`set -e`) with the failing `curl` command visible in the install log, rather than silently producing a broken server.
+
+**32-bit binary risk (XAseco variant):** `TrackmaniaServer` is a 2011-era binary and may be 32-bit. `webdevops/php` images are 64-bit Ubuntu/Debian; if the container is missing `i386` multiarch libraries, the game server process inside `start.sh` will fail with something like `cannot execute binary file` or a missing-library error even though PHP/XAseco itself starts fine. I could not launch an actual container to verify this from my sandbox (no Docker access here). If you hit this, either add `dpkg --add-architecture i386 && apt update && apt install -y libc6:i386` type steps to a custom image, or check the [Crytix/XASECO](https://github.com/Crytix/XASECO) project for a container recipe that already handles this.
 
 ## Installing
 
